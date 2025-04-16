@@ -3,53 +3,51 @@ name: CI/CD Workflow
 on:
   push:
     branches:
-      - main  # Triggers the workflow when changes are pushed to the 'main' branch
+      - main
   pull_request:
     branches:
-      - main  # Triggers the workflow for pull requests targeting the 'main' branch
+      - main
 
 jobs:
   build:
-    runs-on: ubuntu-latest  # Specifies the operating system for the runner (Ubuntu in this case)
+    runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the code from the repository
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Step 2: Set up Python
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.9  # Set the Python version for your project
+          python-version: 3.9
 
-      # Step 3: Install dependencies
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt  # Install your dependencies from requirements.txt
+          pip install -r requirements.txt
 
-      # Step 4: Run tests (Optional)
       - name: Run tests
         run: |
-          # If you have tests, you can use pytest to run them
-          echo "No tests to run"
+          echo "No tests to run"  # Replace with `pytest` if you have tests
 
-      # Step 5: Build Docker image
-      - name: Build Docker image
+      - name: Build Docker image (Root Dockerfile)
         run: |
-          docker build -t ai-code-review .  # Build the Docker image for your project
+          docker build -t ai-code-review .
 
-      # Step 6: Log in to Docker Hub (if you're pushing to Docker Hub)
+      - name: Build Docker image (Server Dockerfile)
+        run: |
+          docker build -t ai-code-review:server -f server/Dockerfile server
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # Step 7: Push Docker image to Docker Hub (Optional)
       - name: Push Docker image to Docker Hub
         run: |
-          docker push ai-code-review  # Push the Docker image to Docker Hub
+          docker tag ai-code-review:server ${{ secrets.DOCKER_USERNAME }}/ai-code-review
+          docker push ${{ secrets.DOCKER_USERNAME }}/ai-code-review
 
-      # Step 8: Deployment (Optional)
-      # You can add steps here to deploy your app to a cloud provider (e.g., AWS, GCP, or Heroku).
+      # - name: Deploy to your hosting service
+      #   run: |
+      #     echo "Add deployment command here (e.g., SSH, AWS CLI, etc.)"
